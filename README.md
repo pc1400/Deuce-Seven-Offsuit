@@ -6,10 +6,7 @@ Group member names and NetIDs:
   -Conor Cunningham (conorrc2), Patrick Cunningham (pmc4)
   
 Project Introduction:
-We have chosen this project because over the last two semesters we have found a love for poker.
--Analytics
--Analyzing emotions
--Social aspect
+We have chosen this project because over the last two semesters we have found a love for poker. The game itself can be learned in roughly an hour of playing, though after that hour, there is so much more to learn. As Engineering students, the statistical analysis that is prevelant with each hand is fascinating, and represents an edge that many fail to consider. What's more, the game has many non-technical aspects, such as analysisng your openents facial features or betting habbits. Finally, poker is a fun game to play socially and is often the highlight of our week if we have the chance to play.
 
 Goals:
   -Make a playable version of poker that closely models a real game of poker
