@@ -2,17 +2,20 @@ use rand::Rng;
 use std::io::*;
 use rs_poker::core::{Hand, Rank, Rankable};
 use rs_poker::core::Deck;
-use rs_poker::core::Card;
+
+
 
 
 #[derive(Clone)]
 
 pub struct Player{
-    cards: Hand,
+    pub cards: Hand,
     name: String,
     chips: i32,
     pub playing: bool,
     pub eligable: bool,
+    pub card1: String,
+    pub card2: String,
 }
 
 impl Player {
@@ -53,6 +56,8 @@ pub fn create_players(amount: i32) -> Vec<Player> {
             chips: 100,
             playing: true,
             eligable: true,
+            card1: "Playing Cards/PNG-cards-1.3/back.png".to_string(),
+            card2: "Playing Cards/PNG-cards-1.3/back.png".to_string(),
         };
         player.push(p);
     }
@@ -62,53 +67,26 @@ pub fn create_players(amount: i32) -> Vec<Player> {
 
 pub fn deal2(d: &mut Deck, h: &mut Hand) {
     let mut rng = rand::thread_rng();
-    let loc = rng.gen_range(1..52);
+    let loc = rng.gen_range(1..d.len());
     let mut count = 1;
-    let mut x = Card {
-        value: rs_poker::core::Value::Nine,
-        suit: rs_poker::core::Suit::Spade,
-    };
     for card in d.iter() {
         if count == loc {
-            x = *card;
+            h.push(*card);
         }
         count += 1;
     }
-    h.push(x);
-    d.remove(x);
+    for card in h.iter() {
+            d.remove(*card);
+    }
 }
 
-pub fn display_player(hand: &Hand, name: String) {
-    print!("{}", name);
+pub fn display_player(hand: &Hand) {
+    println!("");
     println!(" -----      -----");
     println!("|{}    |    |{}    |", hand[0].suit.to_char(), hand[1].suit.to_char());
     println!("|  {}  |    |  {}  |", hand[0].value.to_char(), hand[1].value.to_char());
     println!("|    {}|    |    {}|", hand[0].suit.to_char(), hand[1].suit.to_char());
     println!(" -----      -----");
-}
-
-pub fn print_river3(hand: &Hand) {
-    println!(" -----      -----      -----");
-    println!("|{}    |    |{}    |    |{}    |", hand[0].suit.to_char(), hand[1].suit.to_char(), hand[2].suit.to_char());
-    println!("|  {}  |    |  {}  |    |  {}  |", hand[0].value.to_char(), hand[1].value.to_char(), hand[2].value.to_char());
-    println!("|    {}|    |    {}|    |    {}|", hand[0].suit.to_char(), hand[1].suit.to_char(), hand[2].suit.to_char());
-    println!(" -----      -----      -----");
-}
-
-pub fn print_river4(hand: &Hand) {
-    println!(" -----      -----      -----     -----");
-    println!("|{}    |    |{}    |    |{}    |   |{}    |", hand[0].suit.to_char(), hand[1].suit.to_char(), hand[2].suit.to_char(), hand[3].suit.to_char());
-    println!("|  {}  |    |  {}  |    |  {}  |   |  {}  |", hand[0].value.to_char(), hand[1].value.to_char(), hand[2].value.to_char(), hand[3].value.to_char());
-    println!("|    {}|    |    {}|    |    {}|   |    {}|", hand[0].suit.to_char(), hand[1].suit.to_char(), hand[2].suit.to_char(), hand[3].suit.to_char());
-    println!(" -----      -----      -----     -----");
-}
-
-pub fn print_river5(hand: &Hand) {
-    println!(" -----      -----      -----     -----     -----");
-    println!("|{}    |    |{}    |    |{}    |   |{}    |   |{}    |", hand[0].suit.to_char(), hand[1].suit.to_char(), hand[2].suit.to_char(), hand[3].suit.to_char(), hand[4].suit.to_char());
-    println!("|  {}  |    |  {}  |    |  {}  |   |  {}  |   |  {}  |", hand[0].value.to_char(), hand[1].value.to_char(), hand[2].value.to_char(), hand[3].value.to_char(), hand[4].value.to_char());
-    println!("|    {}|    |    {}|    |    {}|   |    {}|   |    {}|", hand[0].suit.to_char(), hand[1].suit.to_char(), hand[2].suit.to_char(), hand[3].suit.to_char(), hand[4].suit.to_char());
-    println!(" -----      -----      -----     -----     -----");
 }
 
 pub fn river_prep(hands: &mut Vec<Player>, river: Hand) {
@@ -119,27 +97,35 @@ pub fn river_prep(hands: &mut Vec<Player>, river: Hand) {
     }
 }
 
-pub fn finish(hands: &mut Vec<Player>, river: Hand, pot: i32) {
+pub fn finish(hands: &mut Vec<Player>, river: Hand, pot: &mut i32) {
     river_prep(hands, river);
     let mut l = 0;
     let mut result: Rank = Rank::HighCard(0);
     let mut n:String = "hey".to_string();
+    let mut h = Hand::default();
     for (pos,hand) in hands.clone().iter().enumerate() {
         if hand.eligable {
             if hand.cards.rank() > result {
                 result = hand.cards.rank();
                 l = pos;
+                h = hand.clone().cards;
                 n = hand.name.to_string();
             }
         }
     }
     print!("{} is the winner! You win {} dollars", n.to_string(), pot);
+    display_player(&h);
     for (pos,hand) in hands.iter_mut().enumerate() {
         if pos == l {
-            hand.chips += pot;
+            hand.chips += *pot;
         }
     }
     println!("");
+    hands[0].playing = true;
+    hands[0].eligable = true;
+    
+    *pot = 0;
+
 }
 
 fn get_input() -> String {
@@ -148,64 +134,120 @@ fn get_input() -> String {
     buffer
 }
 
-pub fn round(hands: &mut Vec<Player>, pot: &mut i32, river: Hand) {
-    if hands.len() == 1 {
-        return;
+pub fn players_remaining(players: &mut Vec<Player>) -> i32 {
+    let mut player_count:i32 = 0;
+    for player in players {
+        if player.playing {
+            player_count += 1;
+        }
     }
+    return player_count;
+}
+
+pub fn round(hands: &mut Vec<Player>, pot: &mut i32) {
     let cur_bet = 0;
         println!("The board");
-        if river.len() == 3 {
-            print_river3(&river);
-        } else if river.len() == 4 {
-            print_river4(&river);
-        } else {
-            print_river5(&river);
-        }
-        bet(hands, cur_bet, pot, 100);
+        auto_bet(hands, cur_bet, pot, "".to_string());
         
 }
 
-pub fn bet(hands: &mut Vec<Player>, cur_bet: i32, pot: &mut i32, loc:usize) {
+pub fn auto_bet(hands: &mut Vec<Player>, cur_bet: i32, pot: &mut i32, raiser:String) {
     let mut count = 0;
     let mut b = cur_bet;
     let size = hands.len();
-    let mut l:usize = 0;
-    for (pos, hand) in hands.iter_mut().enumerate() {
-        if size == 1 as usize || pos == loc { return; }
+    let mut l = "".to_string();
+    
+    for (pos, hand) in hands.clone().iter().enumerate() {
+        if hand.name == raiser && cur_bet == b{ return; }
         if hand.playing {
-            display_player(&hand.cards, hand.clone().name);
-            println!("{} dollars remaining: {} to call, -1 to fold, 0 to check: ", hand.chips, b);
-            let mut bet = get_input().trim().parse::<i32>().unwrap();
-            if bet == -1 {
-                hand.playing = false;
-                hand.eligable = false;
-                println!("{} has folded - yikes", hand.name);
+            if hand.name != hands[0].name {
+                let mut rng = rand::thread_rng();
+                let loc: i32 = rng.gen_range(1..4);
+                match loc {
+                    1 => {
+                        hands[pos].playing = false;
+                        hands[pos].eligable = false;
+                        println!("{} has folded, {} chips remaining", hand.name.to_string(), hands[pos].chips); 
+                    }
+                    2 => {
+                        if hands[pos].chips >= b {
+                            *pot += b;
+                            hands[pos].chips -= b;
+                            println!("{} has called, {} chips remaining", hand.name.to_string(), hands[pos].chips);
+                        } else {
+                            hands[pos].playing = false;
+                            hands[pos].eligable = false;
+                            println!("{} has folded, {} chips remaining", hand.name.to_string(), hands[pos].chips);
+                        }
+                        
+                    }
+                    3 => {
+                        let old = b;
+                        if hands[pos].chips >= b  {
+                            b = ((b as f32) * 1.25) as i32;
+                            if b >= hand.chips {
+                                b = hand.chips;
+                                hands[pos].playing = false;
+                                hands[pos].chips = 0;
+                            } else {
+                                l = hand.clone().name;
+                                hands[pos].chips -= b;
+                            }
+                            *pot += b;
+                            if b != old {
+                                println!("{} has raised the bet to {}, {} chips remaining", hand.name.to_string(), &b, hands[pos].chips);
+                            }
+                        } else {
+                            hands[pos].playing = false;
+                            hands[pos].eligable = false;
+                            println!("{} has folded, {} chips remaining", hand.name.to_string(), hands[pos].chips);
+                        }
+                        
+                    }
+                    _ => {}
+                }
             } else {
-                if bet < b {
-                    while bet < b {
-                        println!("The minimum bet is {}, try again", b);
+                display_player(&hand.cards);
+                println!("{} dollars remaining: {} to call, -1 to fold, 0 to check: ", hand.chips, b);
+                let mut bet = get_input().trim().parse::<i32>().unwrap();
+                if bet == -1 {
+                    hands[pos].playing = false;
+                    hands[pos].eligable = false;
+                    println!("{} has folded", hand.name);
+                } else {
+                    if cur_bet > hands[pos].chips {
+                        println!("Go all in or fold");
+                        bet = get_input().trim().parse::<i32>().unwrap();
+                    } else if bet < b {
+                        while bet < b {
+                            println!("The minimum bet is {}, try again", b);
+                            bet = get_input().trim().parse::<i32>().unwrap();
+                        }
+                    } else if bet > hand.chips {
+                        println!("You do not have that many chips, try again or go all in");
                         bet = get_input().trim().parse::<i32>().unwrap();
                     }
-                } else if bet > hand.chips {
-                    println!("You do not have that many chips, try again or go all in");
-                    bet = get_input().trim().parse::<i32>().unwrap();
+                    if bet == hand.chips {
+                        println!("{} Has gone all in", hand.name);
+                        hands[pos].playing = false;
+                    }
+                    if bet != b {
+                        println!("The curernt highest is {:?}", l);
+                        l = hand.clone().name;
+                        b = bet;
+                        println!("The new highest is {:?}", l);
+
+                    }
+                    *pot += bet;
+                    hands[pos].chips -= bet;
                 }
-                if bet == hand.chips {
-                    println!("{} Has gone all in", hand.name);
-                    hand.playing = false;
-                }
-                if bet != b {
-                    l = pos;
-                    b = bet;
-                }
-                *pot += bet;
-                hand.chips -= bet;
+                count += 1;
             }
-            count += 1;
         }
     }
-    if (count == hands.len() || l == loc) && (cur_bet == b) { return; } 
+    let name = l.clone().to_string();
+    if (count == size || l == raiser) && (cur_bet == b) { return; } 
+    
 
-    else { bet(hands, b, pot, l); }
-
+    else { auto_bet(hands, b, pot, name.to_string()); }
 }

@@ -19,7 +19,7 @@ use rs_poker::core::Suit;
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{GlGraphics, OpenGL, Texture, TextureSettings,};
 use piston::event_loop::{EventSettings, Events};
-use piston::input::{RenderArgs, RenderEvent, UpdateArgs, UpdateEvent, Key, Button};
+use piston::input::{RenderArgs, RenderEvent, Key, Button};
 use rs_poker::core::Value;
 use std::collections::HashMap;
 use std::path::Path;
@@ -35,20 +35,13 @@ pub struct App {
     turn: String,
     river_card: String,
     
-    player1_card_image1: String,
-    player1_card_image2: String,
-
-    player2_card_image1: String,
-    player2_card_image2: String,
-
-    player3_card_image1: String,
-    player3_card_image2: String,
-    
-
     card_map: HashMap<(Suit, Value), String>,
     players: Vec<Player>,
+
     river: Hand,
     pot: i32,
+
+    new_game: bool,
 
     deck: Deck,
 }
@@ -56,58 +49,74 @@ pub struct App {
 impl App {
     fn render(&mut self, args: &RenderArgs) {
         
-
         const GREEN: [f32; 4] = [0.0, 0.75, 0.0, 1.0];
         const DARK_GREEN: [f32; 4] = [0.0, 0.5, 0.0, 1.0];
         const RED: [f32; 4] = [0.5, 0.0, 0.0, 1.0];
         const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
-        
-
-        self.player1_card_image1 = self.card_map.get(&(self.players[0].cards[0].suit, self.players[0].cards[0].value)).unwrap().to_string();
-        self.player1_card_image2 = self.card_map.get(&(self.players[0].cards[1].suit, self.players[0].cards[1].value)).unwrap().to_string();
-
         let table = rectangle::centered(rectangle::rectangle_by_corners(25.0, 25.0, 375.0, 225.0));
-
         let outer_ring = rectangle::centered(rectangle::rectangle_by_corners(25.0, 25.0, 385.0, 235.0));
-        let (x, y) = (args.window_size[0] / 2.0, args.window_size[1] / 2.0);
-
         let carpet   = Image::new().rect(rectangle::square(0.0, 0.0, 1000.0));
+        let carpet2   = Image::new().rect(rectangle::square(1000.0, 0.0, 1000.0));
+        let (x, y) = (args.window_size[0] / 2.0, args.window_size[1] / 2.0);
+        let player_count = self.players.len();
 
         let carpet_texture = Texture::from_path(Path::new("Playing Cards/PNG-cards-1.3/new_carpet.png"), &TextureSettings::new()).unwrap();
 
-        let flop_card1   = Image::new().rect(rectangle::square(220.0, 225.0, 100.0));
-        let flop_card2   = Image::new().rect(rectangle::square(335.0, 225.0, 100.0));
-        let flop_card3   = Image::new().rect(rectangle::square(450.0, 225.0, 100.0));
-        let turn_card   = Image::new().rect(rectangle::square(565.0, 225.0, 100.0));
-        let river_card   = Image::new().rect(rectangle::square(680.0, 225.0, 100.0));
+        let mut texture_list: Vec<(Texture, Texture)> = Vec::new();
 
-        let player1_card1   = Image::new().rect(rectangle::square(380.0, 410.0, 100.0));
-        let player1_card2   = Image::new().rect(rectangle::square(485.0, 410.0, 100.0));
+        for player in self.players.iter() {
+            if (player.clone().get_name() == self.players[0].clone().get_name() || self.new_game) && player.eligable {
+                texture_list.push((Texture::from_path(Path::new(&self.card_map.get(&(player.cards[0].suit, player.cards[0].value)).unwrap().to_string()), 
+            &TextureSettings::new()).unwrap(), Texture::from_path(Path::new(&self.card_map.get(&(player.cards[1].suit, player.cards[1].value)).unwrap().to_string()), &TextureSettings::new()).unwrap()));
+            } else {
+                texture_list.push((Texture::from_path(Path::new(&"Playing Cards/PNG-cards-1.3/back.png".to_string()), 
+            &TextureSettings::new()).unwrap(), Texture::from_path(Path::new(&"Playing Cards/PNG-cards-1.3/back.png".to_string()), &TextureSettings::new()).unwrap()));
+            }
+        }
 
-        let player2_card1   = Image::new().rect(rectangle::square(40.0, 50.0, 100.0));
-        let player2_card2   = Image::new().rect(rectangle::square(145.0, 50.0, 100.0));
+        let flop_card1   = Image::new().rect(rectangle::square(320.0, 225.0, 100.0));
+        let flop_card2   = Image::new().rect(rectangle::square(435.0, 225.0, 100.0));
+        let flop_card3   = Image::new().rect(rectangle::square(550.0, 225.0, 100.0));
+        let turn_card   = Image::new().rect(rectangle::square(665.0, 225.0, 100.0));
+        let river_card   = Image::new().rect(rectangle::square(780.0, 225.0, 100.0));
 
-        let player3_card1   = Image::new().rect(rectangle::square(800.0, 50.0, 100.0));
-        let player3_card2   = Image::new().rect(rectangle::square(695.0, 50.0, 100.0));
+        let player1_card1   = Image::new().rect(rectangle::square(505.0, 410.0, 100.0));
+        let player1_card2   = Image::new().rect(rectangle::square(610.0, 410.0, 100.0));
+
+        let player2_card1   = Image::new().rect(rectangle::square(205.0, 50.0, 100.0));
+        let player2_card2   = Image::new().rect(rectangle::square(310.0, 50.0, 100.0));
+
+        let player3_card1   = Image::new().rect(rectangle::square(805.0, 50.0, 100.0));
+        let player3_card2   = Image::new().rect(rectangle::square(910.0, 50.0, 100.0));
+
+        let player4_card1   = Image::new().rect(rectangle::square(505.0, 20.0, 100.0));
+        let player4_card2   = Image::new().rect(rectangle::square(610.0, 20.0, 100.0));
+
+        let player5_card1   = Image::new().rect(rectangle::square(210.0, 380.0, 100.0));
+        let player5_card2   = Image::new().rect(rectangle::square(315.0, 380.0, 100.0));
+
+        let player6_card1   = Image::new().rect(rectangle::square(805.0, 380.0, 100.0));
+        let player6_card2   = Image::new().rect(rectangle::square(910.0, 380.0, 100.0));
+
+        let player7_card1   = Image::new().rect(rectangle::square(60.0, 225.0, 100.0));
+        let player7_card2   = Image::new().rect(rectangle::square(165.0, 225.0, 100.0));
+
+        let player8_card1   = Image::new().rect(rectangle::square(935.0, 225.0, 100.0));
+        let player8_card2   = Image::new().rect(rectangle::square(1040.0, 225.0, 100.0));
 
         let flop1_texture = Texture::from_path(Path::new(&self.flop1), &TextureSettings::new()).unwrap();
         let flop2_texture = Texture::from_path(Path::new(&self.flop2), &TextureSettings::new()).unwrap();
         let flop3_texture = Texture::from_path(Path::new(&self.flop3), &TextureSettings::new()).unwrap();
 
-        let player1_card1_texture = Texture::from_path(Path::new(&self.player1_card_image1), &TextureSettings::new()).unwrap();
-        let player1_card2_texture = Texture::from_path(Path::new(&self.player1_card_image2), &TextureSettings::new()).unwrap();
-
-        let player2_card1_texture = Texture::from_path(Path::new(&self.player2_card_image1), &TextureSettings::new()).unwrap();
-        let player2_card2_texture = Texture::from_path(Path::new(&self.player2_card_image2), &TextureSettings::new()).unwrap();
-
-        let player3_card1_texture = Texture::from_path(Path::new(&self.player3_card_image1), &TextureSettings::new()).unwrap();
-        let player3_card2_texture = Texture::from_path(Path::new(&self.player3_card_image2), &TextureSettings::new()).unwrap();
-
         let turn_texture = Texture::from_path(Path::new(&self.turn), &TextureSettings::new()).unwrap();
         let river_texture = Texture::from_path(Path::new(&self.river_card), &TextureSettings::new()).unwrap();
 
         self.gl.draw(args.viewport(), |c, gl| {
+            if player_count < 3 {
+                println!("No more players, please press escape.");
+                return;
+            }
             // Clear the screen.
             clear(RED, gl);
 
@@ -117,6 +126,7 @@ impl App {
                 .trans(-25.0, -25.0);
 
             carpet.draw(&carpet_texture, &DrawState::new_alpha(), c.transform, gl);
+            carpet2.draw(&carpet_texture, &DrawState::new_alpha(), c.transform, gl);
 
             ellipse(DARK_GREEN, table, transform, gl);
             circle_arc(GREEN, 3.0, 0.0, 100.0, table, transform, gl);
@@ -128,22 +138,36 @@ impl App {
             turn_card.draw(&turn_texture, &DrawState::new_alpha(), c.transform, gl);
             river_card.draw(&river_texture, &DrawState::new_alpha(), c.transform, gl);
 
-            player1_card1.draw(&player1_card1_texture, &DrawState::new_alpha(), c.transform, gl);
-            player1_card2.draw(&player1_card2_texture, &DrawState::new_alpha(), c.transform, gl);
+            player1_card1.draw(&texture_list[0].0, &DrawState::new_alpha(), c.transform, gl);
+            player1_card2.draw(&texture_list[0].1, &DrawState::new_alpha(), c.transform, gl);
+        
+            player2_card1.draw(&texture_list[1].0, &DrawState::new_alpha(), c.transform, gl);
+            player2_card2.draw(&texture_list[1].1, &DrawState::new_alpha(), c.transform, gl);
 
-            player2_card1.draw(&player2_card1_texture, &DrawState::new_alpha(), c.transform, gl);
-            player2_card2.draw(&player2_card2_texture, &DrawState::new_alpha(), c.transform, gl);
+            player3_card1.draw(&texture_list[2].0, &DrawState::new_alpha(), c.transform, gl);
+            player3_card2.draw(&texture_list[2].1, &DrawState::new_alpha(), c.transform, gl);
 
-            player3_card1.draw(&player3_card1_texture, &DrawState::new_alpha(), c.transform, gl);
-            player3_card2.draw(&player3_card2_texture, &DrawState::new_alpha(), c.transform, gl);
-
-
-
+            if player_count >= 4 {
+                player4_card1.draw(&texture_list[3].0, &DrawState::new_alpha(), c.transform, gl);
+                player4_card2.draw(&texture_list[3].1, &DrawState::new_alpha(), c.transform, gl);
+            }
+            if player_count >= 5 {
+                player5_card1.draw(&texture_list[4].0, &DrawState::new_alpha(), c.transform, gl);
+                player5_card2.draw(&texture_list[4].1, &DrawState::new_alpha(), c.transform, gl);
+            }
+            if player_count >= 6 {
+                player6_card1.draw(&texture_list[5].0, &DrawState::new_alpha(), c.transform, gl);
+                player6_card2.draw(&texture_list[5].1, &DrawState::new_alpha(), c.transform, gl);
+            }
+            if player_count >= 7 {
+                player7_card1.draw(&texture_list[6].0, &DrawState::new_alpha(), c.transform, gl);
+                player7_card2.draw(&texture_list[6].1, &DrawState::new_alpha(), c.transform, gl);
+            }
+            if player_count >= 8 {
+                player8_card1.draw(&texture_list[7].0, &DrawState::new_alpha(), c.transform, gl);
+                player8_card2.draw(&texture_list[7].1, &DrawState::new_alpha(), c.transform, gl);
+            }
         });
-    }
-
-    fn update(&mut self, args: &UpdateArgs) {
-        // Rotate 2 radians per second.
     }
 
     fn press(&mut self, args: &Button) {
@@ -153,43 +177,51 @@ impl App {
                     self.card_image = "Playing Cards/PNG-cards-1.3/5_of_diamonds.png".to_string();
                 }
                 Key::D => {
-                    round(&mut self.players, &mut self.pot);
-                    
-                    if self.river.len() == 5 {
-                        finish(&mut self.players, self.river.clone(), self.pot);
-
-                        self.player2_card_image1 = self.card_map.get(&(self.players[1].cards[0].suit, self.players[1].cards[0].value)).unwrap().to_string();
-                        self.player2_card_image2 = self.card_map.get(&(self.players[1].cards[1].suit, self.players[1].cards[1].value)).unwrap().to_string();
-
-                        self.player3_card_image1 = self.card_map.get(&(self.players[2].cards[0].suit, self.players[2].cards[0].value)).unwrap().to_string();
-                        self.player3_card_image2 = self.card_map.get(&(self.players[2].cards[1].suit, self.players[2].cards[1].value)).unwrap().to_string();
-                        self.river = Hand::default();
-
-                        for player in self.players.iter_mut() {
-                            player.cards = Hand::default();
+                    if self.new_game {
+                        for (loc,player) in self.players.clone().iter().enumerate() {
+                            if player.clone().get_chips() <= 0 {
+                                println!("{} has ran out of chips!", player.clone().get_name());
+                                if player.clone().get_name() == self.players[0].clone().get_name() {
+                                    println!("GAME OVER - YOU LOST");
+                                    break;
+                                }
+                                self.players.remove(loc-1);
+                            }   
                         }
-
+                        for i in 1..self.players.len() {
+                            self.players[i].card1 = "Playing Cards/PNG-cards-1.3/back.png".to_string();
+                            self.players[i].card2 = "Playing Cards/PNG-cards-1.3/back.png".to_string();
+                            self.players[i].cards = Hand::default();
+                            self.players[i].playing = true;
+                            self.players[i].eligable = true;
+                        }
+                        self.river = Hand::default();
                         self.flop1 = "Playing Cards/PNG-cards-1.3/back.png".to_string();
                         self.flop2 = "Playing Cards/PNG-cards-1.3/back.png".to_string();
                         self.flop3 = "Playing Cards/PNG-cards-1.3/back.png".to_string();
                         self.turn = "Playing Cards/PNG-cards-1.3/back.png".to_string();
                         self.river_card = "Playing Cards/PNG-cards-1.3/back.png".to_string();
-                        
-                        self.player1_card_image1 = "Playing Cards/PNG-cards-1.3/back.png".to_string();
-                        self.player1_card_image2 = "Playing Cards/PNG-cards-1.3/back.png".to_string();
-                        
-                        self.player2_card_image1 = "Playing Cards/PNG-cards-1.3/back.png".to_string();
-                        self.player2_card_image2 = "Playing Cards/PNG-cards-1.3/back.png".to_string();
-
-                        self.player3_card_image1 = "Playing Cards/PNG-cards-1.3/back.png".to_string();
-                        self.player3_card_image2 = "Playing Cards/PNG-cards-1.3/back.png".to_string();
-
                         give_starting(&mut self.deck, &mut self.players);
-
-                        self.player1_card_image1 = self.card_map.get(&(self.players[0].cards[0].suit, self.players[0].cards[0].value)).unwrap().to_string();
-                        self.player1_card_image2 = self.card_map.get(&(self.players[0].cards[1].suit, self.players[0].cards[1].value)).unwrap().to_string();
-
-
+                        self.new_game = false;
+                        return;
+                    }
+                    round(&mut self.players, &mut self.pot);
+                    if self.river.len() == 5 || players_remaining(&mut self.players) == 1 {
+                        for i in 1..self.players.len() {
+                            if self.players[i].eligable {
+                                self.players[i].card1 = self.card_map.get(&(self.players[i].cards[0].suit, self.players[i].cards[0].value))
+                                .unwrap().to_string();
+                                self.players[i].card2 = self.card_map.get(&(self.players[i].cards[1].suit, self.players[i].cards[1].value))
+                                .unwrap().to_string();
+                            }
+                        }
+                        finish(&mut self.players, self.river.clone(), &mut self.pot);
+                        if self.players.len() == 1 {
+                            for p in self.players.clone() {
+                                println!("{} is the winner!!!! Better luck next time boyz", p.get_name());
+                            }
+                        }
+                        self.new_game = true;
                     } else if self.river.len() == 0 {
                         deal2(&mut self.deck,&mut self.river);
                         deal2(&mut self.deck,&mut self.river);
@@ -205,38 +237,37 @@ impl App {
                             self.river_card = self.card_map.get(&(self.river[4].suit, self.river[4].value)).unwrap().to_string();
                         }
                     }
-                    
-
                 }
                 _ => {}
             }
         }
     }
+    
+}
 
-
+fn get_input() -> String {
+        let mut buffer = String::new();
+        std::io::stdin().read_line(&mut buffer).expect("Failed");
+        buffer
 }
 
 fn main() {
-    // Change this to OpenGL::V2_1 if not working.
     let opengl = OpenGL::V3_2;
-    let mut capture_cursor = false;
-    // Create an Glutin window.
-    let mut window: Window = WindowSettings::new("Poker Table", [1000.0, 560.0])
+    let mut window: Window = WindowSettings::new("Poker Table", [1200.0, 560.0])
         .graphics_api(opengl)
         .exit_on_esc(true)
         .build()
         .unwrap();
 
-    let mut start_deck = Deck::default();
-    let mut start_river = Hand::default();
-    let mut pot: i32 = 0;
-
-    let mut test_players = create_players(3);
-
+    println!("How many people are playing?");
     
+    let amount = get_input().trim().parse::<i32>().unwrap();
+    assert!(amount > 2 && amount <= 8);
+
+    let mut test_players = create_players(amount);
+    let mut start_deck = Deck::default();
 
     give_starting(&mut start_deck, &mut test_players);
-
 
     let mut app = App {
         gl: GlGraphics::new(opengl),
@@ -306,40 +337,28 @@ fn main() {
         flop3: "Playing Cards/PNG-cards-1.3/back.png".to_string(),
         turn: "Playing Cards/PNG-cards-1.3/back.png".to_string(),
         river_card: "Playing Cards/PNG-cards-1.3/back.png".to_string(),
-
-        player1_card_image1: "Playing Cards/PNG-cards-1.3/back.png".to_string(),
-        player1_card_image2: "Playing Cards/PNG-cards-1.3/back.png".to_string(),
-
-        player2_card_image1: "Playing Cards/PNG-cards-1.3/back.png".to_string(),
-        player2_card_image2: "Playing Cards/PNG-cards-1.3/back.png".to_string(),
-
-        player3_card_image1: "Playing Cards/PNG-cards-1.3/back.png".to_string(),
-        player3_card_image2: "Playing Cards/PNG-cards-1.3/back.png".to_string(),
-
         players: test_players.clone(),
-        river: start_river.clone(),
+        river: Hand::default(),
         deck: start_deck,
+        new_game: false,
         pot: 0,
-
     };
-
-    
 
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
-
-
         if let Some(args) = e.render_args() {
             app.render(&args);
         }
-
-        if let Some(args) = e.update_args() {
-            app.update(&args);
-        }
-
         if let Some(b) = e.press_args() {
             app.press(&b);
         }
     }
 }
 
+// if let Some(args) = e.update_args() {
+        //     app.update(&args);
+        // }
+
+    // fn update(&mut self, args: &UpdateArgs) {
+    //     // Rotate 2 radians per second.
+    // }
