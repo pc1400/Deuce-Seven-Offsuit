@@ -13,7 +13,7 @@ Goals:
   -Make the game be playable by multiple people from differnet computers
   -Establish a computer player that potentially has a range of skill levels
   -Create a visually pleasing presentation that is easy for the user to interact with.
-  -Create an good betting system, players are able to call, raise and fold. Based on the previous move of the player, the next player must respond. If the player raises, the next player must either call, fold or raise. If the player before checks, the next player can check. Players are able to 
+  -Create an good betting system, players are able to call, raise and fold. Based on the previous move of the player, the next player must respond. If the player raises, the next player must either call, fold or raise. If the player before checks, the next player can check.
 
 System Overview:
   -Player struct
