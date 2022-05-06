@@ -17,20 +17,22 @@ Goals:
 
 System Overview:
   -Player struct
-    -Is able to keep track of chip count, if the count ever drops below 0 they are kicked out, or given the option to buy back in.
-    -Keeps track of the players total winnings.
-    -Cards in hand
-    -Place bet
-  -Deck of cards struct
-    -Array of 52
-    -Shuffle function
-    -Remove card function
+    -Keeps track of the cards in hand, paired with an PNG image of the actual card for the graphics portion of the program
+    -Chip count, if this count ever drops below zero at the start of a game, they are removed from the game.
+    -Keeps track of the players playing statuts, if the folded, all in, ect.
+    -Player name
   -Dealer Struct
+    -The heavy lifting of this function will be done using the poker.rs crate, this crate gives card structs, hand structs, and provides hand evaluations.
+    -Poker crate is able to deal each player their hand, and deals the 5 cards on the table.
     -Checks players status
-    -Determines who wins
-    -Deals the cards
+    -Determines who wins, this is done using the hand evaluation functions provided by poker crate.
 
-If we have time, we want to create an AI that is able to analyze the chance of winning based on the cards in their hand, bets accordingly. Additionally, we would need to create a visible board that the players can look at, a graphic interface. Would be fun to add a luck aspect to the game, maybe if someone is really heating up after winning a couple hands they are more likely to get dealt a better hand. As a whole, the game moves in a circle, it starts by the dealer dealing two cards to every player. The initial bets are made by each player. Next, the "flop" of the three cards are shown. Then the process repeats. Each player makes a bett or simply calls, then the other players must make a decision based on the previous bet.
+    Our program also has a very basic AI system for the other players in the game. The computer will choose a random number between 1 and 3 to determine their move.
+      -Check
+      -Raise
+      -Fold
+    
+    As a whole, the game moves in a circle, it starts by the dealer dealing two cards to every player. The initial bets are made by each player. Next, the "flop" of the three cards are shown. Then the process repeats. Each player makes a bett or simply calls, then the other players must make a decision based on the previous bet.
 
 Possible Challenges:
   -Figuring out how to visualize the game, making a good presentation for the user.
@@ -42,4 +44,9 @@ Possible Challenges:
   -Managing memory when a player is eliminated, what happens to their seat?
 
 References:
-  -None othet than the suggestion on the final project information document.
+  -None other than the suggestion on the final project information document.
+
+
+
+
+
