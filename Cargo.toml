@@ -1,0 +1,26 @@
+[package]
+name = "mp1"
+authors = ["Andrea Roy <akroy2@illinois.edu>"]
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dialoguer="*"
+structopt="*"
+piston = "0.53.0"
+piston2d-graphics = "0.42.0"
+pistoncore-glutin_window = "0.69.0"
+piston2d-opengl_graphics = "0.81.0"
+piston_window = "0.107.0"
+rusttype = "0.8.2"
+fnv = "1.0.6"
+embedded-graphics = "0.7.1"
+find_folder = "0.3.0"
+piston2d-touch_visualizer = "0.32.0"
+textplots = "0.6"
+rs_poker = "1.0.0"
+rand = "0.8.5"
+embedded-graphics-simulator = "0.3.0"
+embedded-text = "0.5.0"
